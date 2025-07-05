@@ -10,7 +10,7 @@ features:
 - Hint feedback (higher/lower)
 
 
-Demo: 
+Demo: https://narvs1999.github.io/games_numberguessing/
 
 ![Demo Image](demo-image.png)
 
