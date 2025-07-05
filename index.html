@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Press Start 2P', cursive;
+        }
+        .input-wiggle {
+            animation: wiggle 0.3s ease;
+        }
+        @keyframes wiggle {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .success-pulse {
+            animation: pulse 0.5s 3;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .attempts-flash {
+            animation: flash 0.5s;
+        }
+        @keyframes flash {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: rgba(239, 68, 68, 0.2); }
+        }
+    </style>
+</head>
+<body class="bg-green-50 min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="text-center max-w-md">
+        <h1 class="text-2xl  mb-10 text-green-800">🔢 GUESSING GAME 🎯</h1>
+        
+        <div id="introMessage" class="text-lg mb-6 text-green-700">
+            🤖 I'm thinking of a number between 1 and 100...
+        </div>
+        
+        <div class="flex flex-col items-center gap-4 mb-6">
+            <div class="flex items-center gap-2">
+                <span class="text-green-700">💬 Your Guess:</span>
+                <input 
+                    id="guessInput" 
+                    type="number" 
+                    min="1" 
+                    max="100" 
+                    class="w-20 bg-green-100 border-2 border-green-300 rounded-lg p-2 text-center text-lg"
+                    placeholder="?"
+                >
+                <button 
+                    id="submitButton" 
+                    class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors duration-200"
+                >
+                    SUBMIT
+                </button>
+            </div>
+            
+            <div id="hint" class="text-lg mb-4 text-green-600 hidden"></div>
+            
+            <div id="attemptsLeft" class="text-lg text-green-700">
+                🔁 Attempts Left: <span id="attemptsCount">6</span>
+            </div>
+        </div>
+        
+        <div id="resultMessage" class="text-xl mb-6 hidden"></div>
+        
+        <button 
+            id="resetButton" 
+            class="bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded-lg transition-colors duration-200"
+        >
+            RESET GAME
+        </button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const introMessage = document.getElementById('introMessage');
+            const guessInput = document.getElementById('guessInput');
+            const submitButton = document.getElementById('submitButton');
+            const hint = document.getElementById('hint');
+            const attemptsCount = document.getElementById('attemptsCount');
+            const attemptsLeft = document.getElementById('attemptsLeft');
+            const resultMessage = document.getElementById('resultMessage');
+            const resetButton = document.getElementById('resetButton');
+            
+            // Game settings
+            const MAX_ATTEMPTS = 6;
+            let targetNumber;
+            let attemptsRemaining;
+            let gameActive;
+            
+            // Initialize game
+            function initGame() {
+                // Generate random number between 1-100
+                targetNumber = Math.floor(Math.random() * 100) + 1;
+                attemptsRemaining = MAX_ATTEMPTS;
+                gameActive = true;
+                
+                console.log("Target number:", targetNumber); // For debugging
+                
+                // Reset UI
+                guessInput.value = '';
+                hint.classList.add('hidden');
+                resultMessage.classList.add('hidden');
+                resultMessage.classList.remove('success-pulse');
+                attemptsCount.textContent = attemptsRemaining;
+                introMessage.textContent = "🤖 I'm thinking of a number between 1 and 100...";
+                
+                // Enable input and button
+                guessInput.disabled = false;
+                submitButton.disabled = false;
+                
+                // Focus input
+                guessInput.focus();
+            }
+            
+            // Handle guess submission
+            function submitGuess() {
+                if (!gameActive) return;
+                
+                // Add wiggle animation
+                guessInput.classList.add('input-wiggle');
+                setTimeout(() => {
+                    guessInput.classList.remove('input-wiggle');
+                }, 300);
+                
+                // Validate input
+                const guess = parseInt(guessInput.value);
+                if (isNaN(guess)) {
+                    hint.textContent = "⚠️ Please enter a valid number!";
+                    hint.classList.remove('hidden');
+                    return;
+                }
+                
+                if (guess < 1 || guess > 100) {
+                    hint.textContent = "⚠️ Number must be between 1-100!";
+                    hint.classList.remove('hidden');
+                    return;
+                }
+                
+                // Decrease attempts
+                attemptsRemaining--;
+                attemptsCount.textContent = attemptsRemaining;
+                attemptsLeft.classList.add('attempts-flash');
+                setTimeout(() => {
+                    attemptsLeft.classList.remove('attempts-flash');
+                }, 500);
+                
+                // Check guess
+                if (guess === targetNumber) {
+                    // Correct guess
+                    gameActive = false;
+                    resultMessage.textContent = `🎉 Correct! The number was ${targetNumber}!`;
+                    resultMessage.classList.remove('hidden');
+                    resultMessage.classList.add('success-pulse');
+                    hint.classList.add('hidden');
+                    
+                    // Disable input and button
+                    guessInput.disabled = true;
+                    submitButton.disabled = true;
+                } else if (attemptsRemaining <= 0) {
+                    // No attempts left
+                    gameActive = false;
+                    resultMessage.textContent = `😢 Game Over! The number was ${targetNumber}.`;
+                    resultMessage.classList.remove('hidden');
+                    hint.classList.add('hidden');
+                    
+                    // Disable input and button
+                    guessInput.disabled = true;
+                    submitButton.disabled = true;
+                } else {
+                    // Provide hint
+                    if (guess < targetNumber) {
+                        hint.textContent = "📈 Hint: Try HIGHER! ⬆️";
+                    } else {
+                        hint.textContent = "📉 Hint: Try LOWER! ⬇️";
+                    }
+                    hint.classList.remove('hidden');
+                    
+                    // Clear input for next guess
+                    guessInput.value = '';
+                    guessInput.focus();
+                }
+            }
+            
+            // Event listeners
+            submitButton.addEventListener('click', submitGuess);
+            guessInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    submitGuess();
+                }
+            });
+            resetButton.addEventListener('click', initGame);
+            
+            // Start the game
+            initGame();
+        });
+    </script>
+</body>
+</html>
